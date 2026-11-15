@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <!-- Servora Stylized 'S' with Cloche & Network Nodes -->
+  <!-- Cloche Dome at bottom left -->
+  <path d="M 45 155 A 42 42 0 0 1 118 155 Z" fill="#0D9488" stroke="#0D9488" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Cloche Handle -->
+  <circle cx="81.5" cy="111" r="5" fill="#0D9488"/>
+  <path d="M 81.5 111 L 81.5 116" stroke="#0D9488" stroke-width="4" stroke-linecap="round"/>
+  <!-- Serving Tray Base -->
+  <rect x="36" y="157" width="168" height="9" rx="4.5" fill="#0B1E36"/>
+
+  <!-- Stylized Geometric 'S' Backbone -->
+  <path d="M 148 76 C 148 62 136 50 120 50 C 98 50 82 64 82 86 C 82 114 158 116 158 150 C 158 178 134 194 104 194 C 84 194 68 184 62 170" stroke="#0B1E36" stroke-width="20" stroke-linecap="round" fill="none"/>
+
+  <!-- Network Circuit Nodes at top right -->
+  <!-- Node 1 (inside curve) -->
+  <circle cx="120" cy="88" r="9" fill="#0D9488"/>
+  <!-- Branching line 1 -->
+  <line x1="120" y1="88" x2="162" y2="64" stroke="#0D9488" stroke-width="5" stroke-linecap="round"/>
+  <!-- Node 2 -->
+  <circle cx="162" cy="64" r="8" fill="#0D9488"/>
+  <!-- Branching line 2 -->
+  <line x1="162" y1="64" x2="192" y2="76" stroke="#0D9488" stroke-width="5" stroke-linecap="round"/>
+  <!-- Node 3 -->
+  <circle cx="192" cy="76" r="7.5" fill="#0D9488"/>
+  <!-- Branching line 3 -->
+  <line x1="162" y1="64" x2="178" y2="104" stroke="#0D9488" stroke-width="5" stroke-linecap="round"/>
+  <!-- Node 4 -->
+  <circle cx="178" cy="104" r="7" fill="#0D9488"/>
+</svg>
