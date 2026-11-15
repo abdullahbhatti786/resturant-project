@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import CustomerLayout from "@/components/layouts/CustomerLayout";
 import { formatPKR } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ interface CartItem {
 
 export default function CustomerCartPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const slug = (params?.slug as string) || "cafe-lahore";
 
@@ -28,8 +29,17 @@ export default function CustomerCartPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedTable = sessionStorage.getItem(`servora_${slug}_table`);
-      setTable(storedTable);
+      const tableParam = searchParams?.get("table");
+      if (tableParam && Number(tableParam) > 0) {
+        setTable(tableParam);
+        sessionStorage.setItem(`servora_${slug}_table`, tableParam);
+        localStorage.setItem(`servora_${slug}_table`, tableParam);
+      } else {
+        const storedTable =
+          sessionStorage.getItem(`servora_${slug}_table`) ||
+          localStorage.getItem(`servora_${slug}_table`);
+        setTable(storedTable);
+      }
 
       const storedCart = sessionStorage.getItem(`servora_${slug}_cart`);
       if (storedCart) {

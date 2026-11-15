@@ -1,22 +1,39 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import CustomerLayout from "@/components/layouts/CustomerLayout";
 
 export default function CustomerEntryPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const slug = (params?.slug as string) || "cafe-lahore";
+  const tableParam = searchParams?.get("table");
 
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [tableCount, setTableCount] = useState(20);
   const [restaurantName, setRestaurantName] = useState("Café Lahore");
 
   useEffect(() => {
+    // If table parameter exists in URL (e.g. from specific QR scan), auto-save and jump straight to menu!
+    if (tableParam && Number(tableParam) > 0) {
+      const tblNum = Number(tableParam);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(`servora_${slug}_table`, String(tblNum));
+        localStorage.setItem(`servora_${slug}_table`, String(tblNum));
+      }
+      router.replace(`/r/${slug}/menu?table=${tblNum}`);
+      return;
+    }
+
     // Check if table already selected in session
-    const stored = sessionStorage.getItem(`servora_${slug}_table`);
-    if (stored) setSelectedTable(Number(stored));
+    if (typeof window !== "undefined") {
+      const stored =
+        sessionStorage.getItem(`servora_${slug}_table`) ||
+        localStorage.getItem(`servora_${slug}_table`);
+      if (stored) setSelectedTable(Number(stored));
+    }
 
     // Fetch restaurant table count
     fetch(`/api/r/${slug}/info`)
@@ -31,16 +48,19 @@ export default function CustomerEntryPage() {
         }
       })
       .catch(() => {});
-  }, [slug]);
+  }, [slug, tableParam, router]);
 
   const handleSelectTable = (tbl: number) => {
     setSelectedTable(tbl);
-    sessionStorage.setItem(`servora_${slug}_table`, String(tbl));
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`servora_${slug}_table`, String(tbl));
+      localStorage.setItem(`servora_${slug}_table`, String(tbl));
+    }
   };
 
   const handleContinue = () => {
     if (!selectedTable) return;
-    router.push(`/r/${slug}/menu`);
+    router.push(`/r/${slug}/menu?table=${selectedTable}`);
   };
 
   return (

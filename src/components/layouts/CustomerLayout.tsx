@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 interface CustomerLayoutProps {
   children: React.ReactNode;
@@ -23,6 +23,7 @@ export default function CustomerLayout({
   tableNumber: initialTable = null,
 }: CustomerLayoutProps) {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = (params?.slug as string) || "cafe-lahore";
 
   const [table, setTable] = useState<string | number | null>(initialTable);
@@ -32,8 +33,17 @@ export default function CustomerLayout({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem(`servora_${slug}_table`);
-      if (stored) setTable(stored);
+      const paramTable = searchParams?.get("table");
+      if (paramTable && Number(paramTable) > 0) {
+        setTable(paramTable);
+        sessionStorage.setItem(`servora_${slug}_table`, paramTable);
+        localStorage.setItem(`servora_${slug}_table`, paramTable);
+      } else {
+        const stored =
+          sessionStorage.getItem(`servora_${slug}_table`) ||
+          localStorage.getItem(`servora_${slug}_table`);
+        if (stored) setTable(stored);
+      }
 
       // Check active order in local/session storage
       const activeRaw =

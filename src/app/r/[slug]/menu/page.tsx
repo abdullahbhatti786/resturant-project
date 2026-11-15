@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import CustomerLayout from "@/components/layouts/CustomerLayout";
 import { formatPKR } from "@/lib/utils";
 
@@ -32,6 +32,7 @@ interface CartItem {
 
 export default function CustomerMenuPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = (params?.slug as string) || "cafe-lahore";
 
   const [restaurantName, setRestaurantName] = useState("Café Lahore");
@@ -44,10 +45,19 @@ export default function CustomerMenuPage() {
   const [table, setTable] = useState<string | null>(null);
 
   useEffect(() => {
-    // Read table from sessionStorage
+    // Read table from URL search params or storage
     if (typeof window !== "undefined") {
-      const storedTable = sessionStorage.getItem(`servora_${slug}_table`);
-      if (storedTable) setTable(storedTable);
+      const tableParam = searchParams?.get("table");
+      if (tableParam && Number(tableParam) > 0) {
+        setTable(tableParam);
+        sessionStorage.setItem(`servora_${slug}_table`, tableParam);
+        localStorage.setItem(`servora_${slug}_table`, tableParam);
+      } else {
+        const storedTable =
+          sessionStorage.getItem(`servora_${slug}_table`) ||
+          localStorage.getItem(`servora_${slug}_table`);
+        if (storedTable) setTable(storedTable);
+      }
 
       const storedCart = sessionStorage.getItem(`servora_${slug}_cart`);
       if (storedCart) {
