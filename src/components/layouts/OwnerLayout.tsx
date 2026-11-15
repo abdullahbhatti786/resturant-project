@@ -59,16 +59,22 @@ export default function OwnerLayout({ children }: OwnerLayoutProps) {
   return (
     <div className="min-h-screen bg-surface flex flex-col lg:flex-row font-sans text-on-surface">
       {/* Mobile Top Navbar (Visible on < 1024px) */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 px-4 py-2.5 flex items-center justify-between shadow-xs">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 px-3.5 sm:px-4 py-2.5 flex items-center justify-between shadow-xs h-14">
         <ServoraBrand size="sm" showTagline={false} />
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors"
+          className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors active:scale-95"
           aria-label="Toggle navigation menu"
         >
-          <span className="material-symbols-outlined text-xl">
-            {mobileOpen ? "close" : "menu"}
-          </span>
+          {mobileOpen ? (
+            <svg className="w-5 h-5 text-on-surface" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-on-surface" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
         </button>
       </div>
 
@@ -94,7 +100,9 @@ export default function OwnerLayout({ children }: OwnerLayoutProps) {
               onClick={() => setMobileOpen(false)}
               className="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container"
             >
-              <span className="material-symbols-outlined text-lg">close</span>
+              <svg className="w-5 h-5 text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
@@ -155,7 +163,7 @@ export default function OwnerLayout({ children }: OwnerLayoutProps) {
 
       {/* Main Content Area Offset by Sidebar (lg:pl-64) & Top bar on mobile (pt-14) */}
       <div className="lg:pl-64 flex-1 flex flex-col min-h-screen pt-14 lg:pt-0 w-full min-w-0">
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">{children}</main>
+        <main className="flex-1 p-3 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto min-w-0">{children}</main>
       </div>
     </div>
   );

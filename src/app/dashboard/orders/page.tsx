@@ -42,8 +42,8 @@ export default function OwnerOrdersPage() {
 
   return (
     <OwnerLayout>
-      <div className="p-8 max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="w-full max-w-6xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-on-surface">Dining Order Log</h1>
             <p className="text-sm text-on-surface-variant mt-1">
@@ -51,7 +51,7 @@ export default function OwnerOrdersPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
             {["all", "received", "preparing", "ready", "served"].map((st) => (
               <button
                 key={st}

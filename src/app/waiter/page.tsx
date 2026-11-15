@@ -266,10 +266,10 @@ export default function WaiterPortalPage() {
         </div>
 
         {/* Operational Tabs Navigation */}
-        <div className="flex items-center gap-2 border-b border-outline-variant/30 pb-2">
+        <div className="flex items-center gap-2 border-b border-outline-variant/30 pb-2 overflow-x-auto no-scrollbar whitespace-nowrap">
           <button
             onClick={() => setActiveTab("requests")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 ${
               activeTab === "requests"
                 ? "bg-primary text-on-primary shadow-xs"
                 : "bg-surface-container text-on-surface hover:bg-surface-container-high"
@@ -278,7 +278,7 @@ export default function WaiterPortalPage() {
             <span className="material-symbols-outlined text-base">notifications_active</span>
             <span>Table Requests</span>
             {activeRequests.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-white text-primary text-[10px] font-extrabold">
+              <span className="px-1.5 py-0.5 rounded-full bg-white text-primary text-[10px] font-extrabold leading-none">
                 {activeRequests.length}
               </span>
             )}
@@ -286,7 +286,7 @@ export default function WaiterPortalPage() {
 
           <button
             onClick={() => setActiveTab("pickups")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 ${
               activeTab === "pickups"
                 ? "bg-primary text-on-primary shadow-xs"
                 : "bg-surface-container text-on-surface hover:bg-surface-container-high"
@@ -295,7 +295,7 @@ export default function WaiterPortalPage() {
             <span className="material-symbols-outlined text-base">room_service</span>
             <span>Kitchen Pickups</span>
             {pickups.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-white text-primary text-[10px] font-extrabold">
+              <span className="px-1.5 py-0.5 rounded-full bg-white text-primary text-[10px] font-extrabold leading-none">
                 {pickups.length}
               </span>
             )}
@@ -303,7 +303,7 @@ export default function WaiterPortalPage() {
 
           <button
             onClick={() => setActiveTab("floor")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 ${
               activeTab === "floor"
                 ? "bg-primary text-on-primary shadow-xs"
                 : "bg-surface-container text-on-surface hover:bg-surface-container-high"
@@ -315,7 +315,7 @@ export default function WaiterPortalPage() {
 
           <button
             onClick={() => setActiveTab("voucher")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 ${
               activeTab === "voucher"
                 ? "bg-primary text-on-primary shadow-xs"
                 : "bg-surface-container text-on-surface hover:bg-surface-container-high"

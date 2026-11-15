@@ -49,8 +49,8 @@ export default function OwnerFeedbackPage() {
 
   return (
     <OwnerLayout>
-      <div className="p-8 max-w-6xl mx-auto">
-        <div className="mb-8">
+      <div className="w-full max-w-6xl mx-auto space-y-6">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-on-surface">Guest Reviews & Feedback</h1>
           <p className="text-sm text-on-surface-variant mt-1">
             Real customer impressions on food flavor, service speed, and dining environment.

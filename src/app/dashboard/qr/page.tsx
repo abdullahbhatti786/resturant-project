@@ -58,8 +58,8 @@ export default function OwnerQRPage() {
 
   return (
     <OwnerLayout>
-      <div className="p-8 max-w-4xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="w-full max-w-4xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-on-surface">Table QR Code Studio</h1>
             <p className="text-sm text-on-surface-variant mt-1">

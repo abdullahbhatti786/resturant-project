@@ -37,8 +37,8 @@ export default function OwnerRequestsPage() {
 
   return (
     <OwnerLayout>
-      <div className="p-8 max-w-5xl mx-auto">
-        <div className="mb-8">
+      <div className="w-full max-w-5xl mx-auto space-y-6">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-on-surface">Floor Service Requests</h1>
           <p className="text-sm text-on-surface-variant mt-1">
             Audit log of all waiter calls, water refills, and bill requests made by table diners.

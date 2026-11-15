@@ -58,8 +58,8 @@ export default function OwnerLoyaltyPage() {
 
   return (
     <OwnerLayout>
-      <div className="p-8 max-w-4xl mx-auto">
-        <div className="mb-8">
+      <div className="w-full max-w-4xl mx-auto space-y-6">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-on-surface">Loyalty Program Engine</h1>
           <p className="text-sm text-on-surface-variant mt-1">
             Configure automated dining streak thresholds, reward gifts, and voucher expiry.

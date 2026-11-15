@@ -26,6 +26,7 @@ export default function KitchenKDSPage() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<KDSOrder[]>([]);
   const [now, setNow] = useState(Date.now());
+  const [mobileTab, setMobileTab] = useState<"all" | "received" | "preparing" | "ready">("all");
 
   // 86'd Stock Modal
   const [showStockModal, setShowStockModal] = useState(false);
@@ -210,10 +211,58 @@ export default function KitchenKDSPage() {
           </div>
         </div>
 
+        {/* Mobile Station Filter Tabs (Visible on < md) */}
+        <div className="md:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          <button
+            onClick={() => setMobileTab("all")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              mobileTab === "all"
+                ? "bg-primary text-on-primary shadow-xs"
+                : "bg-surface-container text-on-surface hover:bg-surface-container-high"
+            }`}
+          >
+            All Tickets ({orders.length})
+          </button>
+          <button
+            onClick={() => setMobileTab("received")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              mobileTab === "received"
+                ? "bg-amber-500 text-white shadow-xs"
+                : "bg-surface-container text-on-surface hover:bg-surface-container-high"
+            }`}
+          >
+            New ({receivedOrders.length})
+          </button>
+          <button
+            onClick={() => setMobileTab("preparing")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              mobileTab === "preparing"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "bg-surface-container text-on-surface hover:bg-surface-container-high"
+            }`}
+          >
+            Cooking ({preparingOrders.length})
+          </button>
+          <button
+            onClick={() => setMobileTab("ready")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              mobileTab === "ready"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-surface-container text-on-surface hover:bg-surface-container-high"
+            }`}
+          >
+            Ready ({readyOrders.length})
+          </button>
+        </div>
+
         {/* 3-Column Kanban Board */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 items-start">
           {/* Column 1: Received */}
-          <div className="flex flex-col gap-3 bg-surface-container/40 p-3 rounded-2xl border border-outline-variant/30 min-h-[500px]">
+          <div
+            className={`flex flex-col gap-3 bg-surface-container/40 p-3 rounded-2xl border border-outline-variant/30 min-h-[300px] sm:min-h-[500px] ${
+              mobileTab !== "all" && mobileTab !== "received" ? "hidden md:flex" : "flex"
+            }`}
+          >
             <div className="flex items-center justify-between px-2 py-1">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
@@ -272,7 +321,11 @@ export default function KitchenKDSPage() {
           </div>
 
           {/* Column 2: In Preparation */}
-          <div className="flex flex-col gap-3 bg-surface-container/40 p-3 rounded-2xl border border-outline-variant/30 min-h-[500px]">
+          <div
+            className={`flex flex-col gap-3 bg-surface-container/40 p-3 rounded-2xl border border-outline-variant/30 min-h-[300px] sm:min-h-[500px] ${
+              mobileTab !== "all" && mobileTab !== "preparing" ? "hidden md:flex" : "flex"
+            }`}
+          >
             <div className="flex items-center justify-between px-2 py-1">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
@@ -331,7 +384,11 @@ export default function KitchenKDSPage() {
           </div>
 
           {/* Column 3: Ready */}
-          <div className="flex flex-col gap-3 bg-surface-container/40 p-3 rounded-2xl border border-outline-variant/30 min-h-[500px]">
+          <div
+            className={`flex flex-col gap-3 bg-surface-container/40 p-3 rounded-2xl border border-outline-variant/30 min-h-[300px] sm:min-h-[500px] ${
+              mobileTab !== "all" && mobileTab !== "ready" ? "hidden md:flex" : "flex"
+            }`}
+          >
             <div className="flex items-center justify-between px-2 py-1">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />

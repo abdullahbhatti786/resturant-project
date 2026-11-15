@@ -105,8 +105,8 @@ export default function OwnerSettingsPage() {
 
   return (
     <OwnerLayout>
-      <div className="p-8 max-w-4xl mx-auto">
-        <div className="mb-8 flex items-center justify-between">
+      <div className="w-full max-w-4xl mx-auto space-y-6">
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-on-surface">Restaurant Settings</h1>
             <p className="text-sm text-on-surface-variant mt-1">
