@@ -177,6 +177,14 @@ export default function CustomerLayout({
             >
               <span className="material-symbols-outlined text-base">person</span>
             </Link>
+
+            <Link
+              href="/login"
+              className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-surface-variant transition-colors"
+              title="Staff & Owner Portal"
+            >
+              <span className="material-symbols-outlined text-base">manage_accounts</span>
+            </Link>
           </div>
         </header>
 
