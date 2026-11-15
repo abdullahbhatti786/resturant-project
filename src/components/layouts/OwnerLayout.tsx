@@ -162,8 +162,8 @@ export default function OwnerLayout({ children }: OwnerLayoutProps) {
       </aside>
 
       {/* Main Content Area Offset by Sidebar (lg:pl-64) & Top bar on mobile (pt-14) */}
-      <div className="lg:pl-64 flex-1 flex flex-col min-h-screen pt-14 lg:pt-0 w-full min-w-0">
-        <main className="flex-1 p-3 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto min-w-0">{children}</main>
+      <div className="lg:pl-64 flex-1 flex flex-col min-h-screen pt-14 lg:pt-0 w-full min-w-0 overflow-x-hidden">
+        <main className="flex-1 p-3 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto min-w-0 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

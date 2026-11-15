@@ -165,15 +165,6 @@ export default function OwnerQRPage() {
                   </button>
                 </div>
               </div>
-
-              <div className="p-4 rounded-xl bg-primary-container/10 border border-primary-container/20 text-xs text-on-surface flex items-start gap-3">
-                <span className="material-symbols-outlined text-primary text-base shrink-0 mt-0.5">
-                  info
-                </span>
-                <p>
-                  <strong>Same-WiFi Testing Tip:</strong> If testing from your phone, ensure your phone is connected to the same Wi-Fi and that <code className="bg-surface px-1 py-0.5 rounded">NEXT_PUBLIC_APP_URL</code> is set to your Mac&apos;s local IP (e.g. <code className="bg-surface px-1 py-0.5 rounded">http://192.168.x.x:3000</code>).
-                </p>
-              </div>
             </div>
           </div>
         )}

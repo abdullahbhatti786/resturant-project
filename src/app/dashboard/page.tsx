@@ -187,7 +187,7 @@ export default function DashboardOverviewPage() {
 
         {/* Peak Hours Volume Visualizer */}
         {data?.peakHours && (
-          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-xs">
+          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 sm:p-6 shadow-xs overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-bold text-sm text-on-surface">Dining Peak Hours Distribution</h3>
@@ -196,23 +196,26 @@ export default function DashboardOverviewPage() {
               <span className="material-symbols-outlined text-primary text-xl">bar_chart</span>
             </div>
 
-            <div className="flex items-end gap-2 h-32 pt-6 px-2 border-b border-outline-variant/30">
-              {data.peakHours.map((ph, idx) => {
-                const maxOrders = Math.max(...data.peakHours.map((p) => p.orders), 1);
-                const heightPct = Math.max((ph.orders / maxOrders) * 100, 10);
-                return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
-                    <span className="text-[10px] font-bold text-on-surface">{ph.orders}</span>
-                    <div
-                      className="w-full bg-primary rounded-t-md transition-all duration-300"
-                      style={{ height: `${heightPct}%` }}
-                    />
-                    <span className="text-[10px] text-on-surface-variant whitespace-nowrap">
-                      {ph.hour}
-                    </span>
-                  </div>
-                );
-              })}
+            {/* Scrollable Container on Mobile to prevent page blowout */}
+            <div className="overflow-x-auto no-scrollbar pb-2">
+              <div className="flex items-end gap-1.5 sm:gap-2 h-32 pt-6 px-1 sm:px-2 border-b border-outline-variant/30 min-w-[480px] sm:min-w-0">
+                {data.peakHours.map((ph, idx) => {
+                  const maxOrders = Math.max(...data.peakHours.map((p) => p.orders), 1);
+                  const heightPct = Math.max((ph.orders / maxOrders) * 100, 10);
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end min-w-[28px]">
+                      <span className="text-[10px] font-bold text-on-surface">{ph.orders}</span>
+                      <div
+                        className="w-full bg-primary rounded-t-md transition-all duration-300 min-w-[8px]"
+                        style={{ height: `${heightPct}%` }}
+                      />
+                      <span className="text-[10px] text-on-surface-variant whitespace-nowrap">
+                        {ph.hour}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

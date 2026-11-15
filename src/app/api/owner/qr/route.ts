@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
     const appUrl = getAppUrl().replace(/\/+$/, "");
     const targetUrl = tableParam
-      ? `${appUrl}/r/${restaurant.slug}?table=${encodeURIComponent(tableParam)}`
+      ? `${appUrl}/r/${restaurant.slug}/menu?table=${encodeURIComponent(tableParam)}`
       : `${appUrl}/r/${restaurant.slug}`;
 
     const qrDataUrl = await QRCode.toDataURL(targetUrl, {
