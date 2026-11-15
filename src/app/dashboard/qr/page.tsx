@@ -8,18 +8,22 @@ export default function OwnerQRPage() {
     qrDataUrl: string;
     qrSvg: string;
     targetUrl: string;
+    tableNumber?: string | null;
     restaurantName: string;
     slug: string;
   } | null>(null);
+  const [selectedTable, setSelectedTable] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchQR();
-  }, []);
+    fetchQR(selectedTable);
+  }, [selectedTable]);
 
-  const fetchQR = async () => {
+  const fetchQR = async (tableNum = "") => {
     try {
-      const res = await fetch("/api/owner/qr");
+      setLoading(true);
+      const url = tableNum ? `/api/owner/qr?table=${tableNum}` : "/api/owner/qr";
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setQrData(data);
@@ -35,7 +39,8 @@ export default function OwnerQRPage() {
     if (!qrData?.qrDataUrl) return;
     const a = document.createElement("a");
     a.href = qrData.qrDataUrl;
-    a.download = `${qrData.slug}-table-qr.png`;
+    const suffix = selectedTable ? `-table-${selectedTable}` : "-universal";
+    a.download = `${qrData.slug}${suffix}-qr.png`;
     a.click();
   };
 
@@ -45,7 +50,8 @@ export default function OwnerQRPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${qrData.slug}-table-qr.svg`;
+    const suffix = selectedTable ? `-table-${selectedTable}` : "-universal";
+    a.download = `${qrData.slug}${suffix}-qr.svg`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -53,11 +59,30 @@ export default function OwnerQRPage() {
   return (
     <OwnerLayout>
       <div className="p-8 max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-on-surface">Universal Table QR Code</h1>
-          <p className="text-sm text-on-surface-variant mt-1">
-            Every table displays this QR code. Diners scan it with their phone camera to pick their table and start ordering.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-on-surface">Table QR Code Studio</h1>
+            <p className="text-sm text-on-surface-variant mt-1">
+              Generate universal or table-specific QR codes for menus, tent cards, and slide presentations.
+            </p>
+          </div>
+
+          {/* Table Selector Dropdown */}
+          <div className="flex items-center gap-2 bg-surface-container p-2 rounded-2xl border border-outline-variant/30">
+            <span className="material-symbols-outlined text-primary text-base pl-1">table_restaurant</span>
+            <select
+              value={selectedTable}
+              onChange={(e) => setSelectedTable(e.target.value)}
+              className="bg-transparent font-bold text-xs text-on-surface focus:outline-none pr-3 py-1 cursor-pointer"
+            >
+              <option value="">🌐 Universal QR (Diner picks table)</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((t) => (
+                <option key={t} value={t.toString()}>
+                  Table {t} Specific QR
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {loading ? (
