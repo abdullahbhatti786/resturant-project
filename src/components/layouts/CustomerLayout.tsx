@@ -15,6 +15,8 @@ interface ActiveOrderBanner {
   token: string;
   tableNumber: number;
   status: string;
+  paymentStatus?: string;
+  total?: number;
 }
 
 export default function CustomerLayout({
@@ -45,6 +47,33 @@ export default function CustomerLayout({
         if (stored) setTable(stored);
       }
 
+      const activeTableNum = paramTable || sessionStorage.getItem(`servora_${slug}_table`) || localStorage.getItem(`servora_${slug}_table`);
+
+      const checkTableActiveOrder = (tableNum: string | number) => {
+        fetch(`/api/r/${slug}/active-order?table=${tableNum}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.hasActiveOrder && data.order) {
+              const orderRecord = JSON.stringify({
+                orderId: data.order.id,
+                token: data.order.publicToken,
+                tableNumber: Number(data.order.tableNumber),
+              });
+              localStorage.setItem(`servora_${slug}_active_order`, orderRecord);
+              sessionStorage.setItem(`servora_${slug}_active_order`, orderRecord);
+              setActiveOrder({
+                id: data.order.id,
+                token: data.order.publicToken,
+                tableNumber: data.order.tableNumber,
+                status: data.order.status,
+                paymentStatus: data.order.paymentStatus,
+                total: data.order.total,
+              });
+            }
+          })
+          .catch(() => {});
+      };
+
       // Check active order in local/session storage
       const activeRaw =
         localStorage.getItem(`servora_${slug}_active_order`) ||
@@ -58,20 +87,37 @@ export default function CustomerLayout({
               .then((res) => res.json())
               .then((data) => {
                 if (data.success && data.order) {
+                  // If order is paid, clear active order
+                  if (data.order.paymentStatus === "paid") {
+                    localStorage.removeItem(`servora_${slug}_active_order`);
+                    sessionStorage.removeItem(`servora_${slug}_active_order`);
+                    setActiveOrder(null);
+                    return;
+                  }
+
                   setActiveOrder({
                     id: parsed.orderId,
                     token: parsed.token,
                     tableNumber: data.order.tableNumber,
                     status: data.order.status,
+                    paymentStatus: data.order.paymentStatus,
+                    total: data.order.total,
                   });
+                } else if (activeTableNum) {
+                  // Fallback to table lookup if stored order is invalid
+                  checkTableActiveOrder(activeTableNum);
                 }
               })
               .catch(() => {});
           }
         } catch {
-          // ignore parse errors
+          if (activeTableNum) checkTableActiveOrder(activeTableNum);
         }
+      } else if (activeTableNum) {
+        // No local storage record (e.g. user closed browser / scanned fresh QR) -> recover from server by table!
+        checkTableActiveOrder(activeTableNum);
       }
+
       // Listen for custom logout / order clear event
       const onOrderCleared = () => setActiveOrder(null);
       window.addEventListener("servora_order_cleared", onOrderCleared);
@@ -190,15 +236,26 @@ export default function CustomerLayout({
 
         {/* Persistent Active Order Banner (Visible across ALL screens when order exists) */}
         {activeOrder && (
-          <div className="sticky top-[61px] z-30 bg-primary text-on-primary px-4 py-2.5 flex items-center justify-between text-xs font-bold shadow-md animate-in slide-in-from-top duration-200">
+          <div
+            className={`sticky top-[61px] z-30 px-4 py-2.5 flex items-center justify-between text-xs font-bold shadow-md animate-in slide-in-from-top duration-200 ${
+              activeOrder.paymentStatus === "bill_requested"
+                ? "bg-amber-600 text-white"
+                : activeOrder.status === "served"
+                ? "bg-blue-600 text-white"
+                : "bg-primary text-on-primary"
+            }`}
+          >
             <Link
               href={`/r/${slug}/order/${activeOrder.id}?token=${activeOrder.token}`}
               className="flex items-center gap-2 flex-1 min-w-0 pr-2"
             >
               <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping shrink-0" />
               <span className="truncate">
-                Table {activeOrder.tableNumber} Order •{" "}
-                <span className="uppercase">{activeOrder.status}</span>
+                {activeOrder.paymentStatus === "bill_requested"
+                  ? `Table ${activeOrder.tableNumber} • Bill Requested (Rs. ${activeOrder.total || 0})`
+                  : activeOrder.status === "served"
+                  ? `Table ${activeOrder.tableNumber} • Food Served • Bill Pending`
+                  : `Table ${activeOrder.tableNumber} Order • ${activeOrder.status.toUpperCase()}`}
               </span>
             </Link>
 
@@ -207,7 +264,7 @@ export default function CustomerLayout({
                 href={`/r/${slug}/order/${activeOrder.id}?token=${activeOrder.token}`}
                 className="flex items-center gap-1 text-[11px] bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded-lg"
               >
-                <span>Track</span>
+                <span>{activeOrder.paymentStatus === "bill_requested" ? "Pay Bill" : "Track"}</span>
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </Link>
               <button

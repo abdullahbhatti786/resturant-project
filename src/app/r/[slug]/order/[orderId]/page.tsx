@@ -17,6 +17,8 @@ interface OrderDetail {
   }>;
   total: number;
   status: "received" | "preparing" | "ready" | "served";
+  paymentStatus: "unpaid" | "bill_requested" | "paid";
+  paidAt?: string;
   createdAt: string;
 }
 
@@ -32,6 +34,31 @@ export default function OrderTrackingPage() {
   const [wifiCreds, setWifiCreds] = useState<{ name?: string; pass?: string }>({});
   const [loading, setLoading] = useState(true);
   const [copiedWifi, setCopiedWifi] = useState(false);
+  const [requestingBill, setRequestingBill] = useState(false);
+  const [billMsg, setBillMsg] = useState<string | null>(null);
+
+  const handleRequestBill = async () => {
+    try {
+      setRequestingBill(true);
+      setBillMsg(null);
+      const res = await fetch(`/api/orders/${orderId}/bill`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBillMsg("Floor Captain ko bill request bhej di gayi hai! Please cash ready rakhain.");
+        setOrder((prev) => (prev ? { ...prev, paymentStatus: "bill_requested" } : null));
+      } else {
+        setBillMsg(data.message || "Failed to request bill");
+      }
+    } catch {
+      setBillMsg("Network error. Please call waiter directly.");
+    } finally {
+      setRequestingBill(false);
+    }
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -40,6 +67,11 @@ export default function OrderTrackingPage() {
         const data = await res.json();
         if (data.success && data.order) {
           setOrder(data.order);
+          if (data.order.paymentStatus === "paid" && typeof window !== "undefined") {
+            localStorage.removeItem(`servora_${slug}_active_order`);
+            sessionStorage.removeItem(`servora_${slug}_active_order`);
+            window.dispatchEvent(new Event("servora_order_cleared"));
+          }
           if (data.restaurant) {
             setRestaurantName(data.restaurant.name);
             setWifiCreds({
@@ -281,6 +313,90 @@ export default function OrderTrackingPage() {
             </div>
           </div>
         ) : null}
+
+        {/* CASH IN HAND & BILL PAYMENT CARD */}
+        {order && (
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-4 shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-600 text-xl">payments</span>
+                <h3 className="font-bold text-xs text-on-surface">Bill &amp; Payment Status</h3>
+              </div>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                  order.paymentStatus === "paid"
+                    ? "bg-emerald-100 text-emerald-800"
+                    : order.paymentStatus === "bill_requested"
+                    ? "bg-amber-100 text-amber-800 animate-pulse"
+                    : "bg-rose-100 text-rose-800"
+                }`}
+              >
+                {order.paymentStatus === "paid"
+                  ? "Paid in Cash"
+                  : order.paymentStatus === "bill_requested"
+                  ? "Bill Requested"
+                  : "Payment Pending"}
+              </span>
+            </div>
+
+            {order.paymentStatus === "paid" ? (
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-col gap-1.5 text-center items-center">
+                <span className="material-symbols-outlined text-2xl text-emerald-600">
+                  check_circle
+                </span>
+                <p className="font-extrabold text-xs">
+                  Cash Payment of {formatPKR(order.total)} Received!
+                </p>
+                <p className="text-[11px] text-emerald-800">
+                  Aap ki payment verify ho chuki hai aur Table free ho chuka hai. Thank you!
+                </p>
+              </div>
+            ) : order.paymentStatus === "bill_requested" ? (
+              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col gap-1.5 text-center items-center">
+                <span className="material-symbols-outlined text-2xl text-amber-600 animate-bounce">
+                  receipt_long
+                </span>
+                <p className="font-extrabold text-xs">
+                  Floor Captain Bill aur Paper Receipt lekar aa raha hai
+                </p>
+                <p className="text-[11px] text-amber-800">
+                  Please total cash <strong>{formatPKR(order.total)}</strong> ready rakhain.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-3 rounded-xl bg-surface-container flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-[11px] text-on-surface-variant font-medium">Payment Mode</span>
+                    <p className="font-bold text-on-surface">Cash in Hand</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[11px] text-on-surface-variant font-medium">Payable Amount</span>
+                    <p className="font-extrabold text-primary text-sm">{formatPKR(order.total)}</p>
+                  </div>
+                </div>
+
+                {billMsg && (
+                  <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg font-semibold text-center">
+                    {billMsg}
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  disabled={requestingBill}
+                  onClick={handleRequestBill}
+                  className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined text-base">receipt_long</span>
+                  <span>
+                    {requestingBill ? "Requesting Bill..." : `Request Bill from Captain (${formatPKR(order.total)} Cash)`}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Order More Items Button */}
         <Link

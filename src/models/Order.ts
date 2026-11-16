@@ -16,6 +16,11 @@ export interface IOrder extends Document {
   items: IOrderItem[];
   total: number;
   status: "received" | "preparing" | "ready" | "served";
+  paymentStatus: "unpaid" | "bill_requested" | "paid";
+  paymentMethod?: "cash" | "card" | "online";
+  paidAt?: Date;
+  paidByStaffId?: mongoose.Types.ObjectId;
+  billRequestedAt?: Date;
   servedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +51,20 @@ const OrderSchema = new Schema<IOrder>(
       default: "received",
       index: true,
     },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "bill_requested", "paid"],
+      default: "unpaid",
+      index: true,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "card", "online"],
+      default: "cash",
+    },
+    paidAt: { type: Date },
+    paidByStaffId: { type: Schema.Types.ObjectId, ref: "User" },
+    billRequestedAt: { type: Date },
     servedAt: { type: Date },
   },
   { timestamps: true }

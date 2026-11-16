@@ -227,6 +227,7 @@ export async function GET(req: NextRequest) {
     const restaurantId = getEffectiveRestaurantId(session);
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
+    const paymentStatus = searchParams.get("paymentStatus");
 
     await connectToDatabase();
     const filter: Record<string, unknown> = {
@@ -234,6 +235,9 @@ export async function GET(req: NextRequest) {
     };
     if (status) {
       filter.status = status;
+    }
+    if (paymentStatus) {
+      filter.paymentStatus = paymentStatus;
     }
 
     const orders = await Order.find(filter)

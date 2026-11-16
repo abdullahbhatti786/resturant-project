@@ -21,10 +21,10 @@ export async function GET() {
       return NextResponse.json({ success: false, message: "Restaurant not found" }, { status: 404 });
     }
 
-    // Active orders (not served)
+    // Active orders: any order on this table that is NOT yet paid
     const activeOrders = await Order.find({
       restaurantId,
-      status: { $in: ["received", "preparing", "ready"] },
+      paymentStatus: { $in: ["unpaid", "bill_requested"] },
     }).sort({ createdAt: -1 });
 
     // Active requests (not resolved)
@@ -40,7 +40,13 @@ export async function GET() {
       const tableReqs = activeRequests.filter((r) => r.tableNumber === t);
 
       let status = "vacant";
-      if (tableReqs.length > 0) {
+      const hasBillRequest =
+        tableReqs.some((r) => r.type === "bill") ||
+        tableOrder?.paymentStatus === "bill_requested";
+
+      if (hasBillRequest) {
+        status = "bill_pending";
+      } else if (tableReqs.length > 0) {
         status = "request_pending";
       } else if (tableOrder?.status === "ready") {
         status = "food_ready";
@@ -55,6 +61,7 @@ export async function GET() {
           ? {
               id: tableOrder._id,
               status: tableOrder.status,
+              paymentStatus: tableOrder.paymentStatus || "unpaid",
               total: tableOrder.total,
               itemCount: tableOrder.items.reduce((s, i) => s + i.quantity, 0),
               createdAt: tableOrder.createdAt,

@@ -25,8 +25,8 @@ interface ReadyOrder {
 
 interface TableFloorItem {
   tableNumber: number;
-  status: "vacant" | "occupied" | "request_pending" | "food_ready";
-  order?: { id: string; status: string; total: number; itemCount: number } | null;
+  status: "vacant" | "occupied" | "request_pending" | "food_ready" | "bill_pending";
+  order?: { id: string; status: string; paymentStatus?: string; total: number; itemCount: number } | null;
   requests?: Array<{ id: string; type: string; status: string }>;
 }
 
@@ -153,6 +153,28 @@ export default function WaiterPortalPage() {
       }
     } catch {
       alert("Error marking order served");
+    }
+  };
+
+  const handleCollectPayment = async (orderId: string, tableNumber: number, total: number) => {
+    if (!confirm(`Table ${tableNumber} se Rs. ${total} Cash receive ho gaya hai? Is order ko Paid mark karein aur Table free karein?`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/orders/${orderId}/pay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentMethod: "cash" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message || `Table ${tableNumber} payment recorded! Table is now free.`);
+        fetchData();
+      } else {
+        alert(data.message || "Failed to record payment");
+      }
+    } catch {
+      alert("Error processing payment");
     }
   };
 
@@ -384,6 +406,26 @@ export default function WaiterPortalPage() {
                       <p className="text-xs text-on-surface-variant mb-4 bg-surface p-2.5 rounded-xl border border-outline-variant/20">
                         {req.note || "Customer tapped quick button on table."}
                       </p>
+
+                      {/* Instant Cash Collection Button for Bill Requests */}
+                      {req.type === "bill" && (
+                        (() => {
+                          const tableOrder = floorTables.find((f) => f.tableNumber === req.tableNumber)?.order;
+                          if (tableOrder) {
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => handleCollectPayment(tableOrder.id, req.tableNumber, tableOrder.total)}
+                                className="w-full mb-3 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
+                              >
+                                <span className="material-symbols-outlined text-sm">payments</span>
+                                <span>Collect {formatPKR(tableOrder.total)} Cash &amp; Free Table</span>
+                              </button>
+                            );
+                          }
+                          return null;
+                        })()
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
@@ -480,20 +522,24 @@ export default function WaiterPortalPage() {
         {/* TAB 3: FLOOR MATRIX */}
         {activeTab === "floor" && (
           <div className="space-y-4">
-            <div className="flex items-center gap-4 text-xs font-bold text-on-surface-variant">
-              <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-3 sm:gap-4 text-xs font-bold text-on-surface-variant overflow-x-auto no-scrollbar pb-1">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="w-3 h-3 rounded-full bg-surface-container border" />
                 <span>Vacant</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="w-3 h-3 rounded-full bg-blue-500" />
                 <span>Occupied / Cooking</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Food Ready</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="w-3 h-3 rounded-full bg-amber-500 animate-pulse" />
+                <span>Bill Pending</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="w-3 h-3 rounded-full bg-rose-500 animate-bounce" />
                 <span>Service Alert</span>
               </div>
@@ -502,7 +548,9 @@ export default function WaiterPortalPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
               {floorTables.map((t) => {
                 let badgeStyle = "bg-surface-container border-outline-variant/30 text-on-surface";
-                if (t.status === "request_pending") {
+                if (t.status === "bill_pending") {
+                  badgeStyle = "bg-amber-50 border-amber-400 text-amber-900 shadow-sm ring-2 ring-amber-400/30";
+                } else if (t.status === "request_pending") {
                   badgeStyle = "bg-rose-50 border-rose-300 text-rose-800 shadow-sm";
                 } else if (t.status === "food_ready") {
                   badgeStyle = "bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm";
@@ -513,30 +561,55 @@ export default function WaiterPortalPage() {
                 return (
                   <div
                     key={t.tableNumber}
-                    className={`p-3.5 rounded-2xl border flex flex-col justify-between min-h-[90px] transition-all ${badgeStyle}`}
+                    className={`p-3.5 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all ${badgeStyle}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-sm">Table {t.tableNumber}</span>
-                      <span className="text-[10px] font-bold uppercase">
-                        {t.status === "request_pending"
-                          ? "Alert"
-                          : t.status === "food_ready"
-                          ? "Ready"
-                          : t.status === "occupied"
-                          ? "Eating"
-                          : "Free"}
-                      </span>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-sm">Table {t.tableNumber}</span>
+                        <span className="text-[10px] font-bold uppercase">
+                          {t.status === "bill_pending"
+                            ? "Bill Due"
+                            : t.status === "request_pending"
+                            ? "Alert"
+                            : t.status === "food_ready"
+                            ? "Ready"
+                            : t.status === "occupied"
+                            ? "Eating"
+                            : "Free"}
+                        </span>
+                      </div>
+
+                      <div className="mt-1.5 text-[11px]">
+                        {t.order ? (
+                          <div>
+                            <p className="font-bold text-on-surface">
+                              {t.order.itemCount} items • {formatPKR(t.order.total)}
+                            </p>
+                            <p className="text-[10px] opacity-75 font-semibold">
+                              {t.status === "bill_pending" ? "Cash Payment Pending" : "Guest Dining"}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="opacity-60">Ready for guest</p>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="mt-2 text-[11px]">
-                      {t.order ? (
-                        <p className="font-medium">
-                          {t.order.itemCount} items • {formatPKR(t.order.total)}
-                        </p>
-                      ) : (
-                        <p className="opacity-60">Ready for guest</p>
-                      )}
-                    </div>
+                    {/* Instant Collect Payment Button to Free Table */}
+                    {t.order && (
+                      <button
+                        type="button"
+                        onClick={() => handleCollectPayment(t.order!.id, t.tableNumber, t.order!.total)}
+                        className={`mt-2.5 w-full py-1.5 px-2 rounded-xl font-black text-[10px] sm:text-[11px] shadow-xs transition-all active:scale-95 flex items-center justify-center gap-1 ${
+                          t.status === "bill_pending"
+                            ? "bg-amber-600 hover:bg-amber-700 text-white animate-pulse"
+                            : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-xs">payments</span>
+                        <span>Paid &amp; Free Table</span>
+                      </button>
+                    )}
                   </div>
                 );
               })}

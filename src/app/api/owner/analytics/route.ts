@@ -17,10 +17,18 @@ export async function GET() {
     await connectToDatabase();
     const restaurantId = getEffectiveRestaurantId(session);
 
-    // All served orders
-    const servedOrders = await Order.find({ restaurantId, status: "served" });
+    // Orders and Payments
     const allOrders = await Order.find({ restaurantId });
-    const totalRevenue = servedOrders.reduce((sum, ord) => sum + (ord.total || 0), 0);
+    const paidOrders = allOrders.filter((ord) => ord.paymentStatus === "paid");
+    const pendingOrders = allOrders.filter((ord) => ord.paymentStatus !== "paid");
+    const servedOrders = allOrders.filter((ord) => ord.status === "served");
+
+    // Total revenue is collected from paid orders (or fallback to served if legacy)
+    const totalRevenue = paidOrders.length > 0
+      ? paidOrders.reduce((sum, ord) => sum + (ord.total || 0), 0)
+      : servedOrders.reduce((sum, ord) => sum + (ord.total || 0), 0);
+
+    const pendingRevenue = pendingOrders.reduce((sum, ord) => sum + (ord.total || 0), 0);
 
     const totalRequests = await ServiceRequest.countDocuments({ restaurantId });
     const totalCustomers = await Customer.countDocuments({ restaurantId });
@@ -43,6 +51,9 @@ export async function GET() {
       success: true,
       kpis: {
         totalRevenue,
+        pendingRevenue,
+        pendingPaymentsCount: pendingOrders.length,
+        paidOrdersCount: paidOrders.length,
         servedOrdersCount: servedOrders.length,
         totalOrdersCount: allOrders.length,
         totalRequests,

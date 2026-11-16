@@ -8,6 +8,9 @@ import { formatPKR } from "@/lib/utils";
 interface AnalyticsData {
   kpis: {
     totalRevenue: number;
+    pendingRevenue?: number;
+    pendingPaymentsCount?: number;
+    paidOrdersCount?: number;
     servedOrdersCount: number;
     totalOrdersCount: number;
     totalRequests: number;
@@ -65,13 +68,21 @@ export default function DashboardOverviewPage() {
           <div className="p-3.5 sm:p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-xs flex items-center justify-between">
             <div className="min-w-0">
               <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase tracking-wider truncate">
-                Served Revenue
+                Collected Revenue
               </p>
               <h3 className="text-lg sm:text-2xl font-extrabold text-on-surface mt-0.5 sm:mt-1 truncate">
                 {data ? formatPKR(data.kpis.totalRevenue) : "Rs. 0"}
               </h3>
-              <p className="text-[10px] sm:text-[11px] text-emerald-700 font-semibold mt-0.5 truncate">
-                {data ? `${data.kpis.servedOrdersCount} served` : "0 orders"}
+              <p className="text-[10px] sm:text-[11px] font-semibold mt-0.5 truncate">
+                {data?.kpis.pendingPaymentsCount && data.kpis.pendingPaymentsCount > 0 ? (
+                  <span className="text-amber-600 font-bold">
+                    {data.kpis.pendingPaymentsCount} pending ({formatPKR(data.kpis.pendingRevenue || 0)})
+                  </span>
+                ) : (
+                  <span className="text-emerald-700">
+                    {data ? `${data.kpis.paidOrdersCount || data.kpis.servedOrdersCount} paid` : "0 orders"}
+                  </span>
+                )}
               </p>
             </div>
             <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 ml-2">
