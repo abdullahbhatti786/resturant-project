@@ -50,7 +50,7 @@ export default function CustomerCartPage() {
         }
       }
     }
-  }, [slug]);
+  }, [slug, searchParams]);
 
   const updateCart = (newCart: CartItem[]) => {
     setCart(newCart);
@@ -123,13 +123,17 @@ export default function CustomerCartPage() {
       if (res.ok && data.success) {
         // Clear cart
         updateCart([]);
-        // Save current active order tracking in both localStorage and sessionStorage
+        // Save current active order tracking strictly per table
         if (typeof window !== "undefined") {
           const orderRecord = JSON.stringify({
             orderId: data.orderId,
             token: data.publicToken,
             tableNumber: Number(table),
           });
+          if (table) {
+            localStorage.setItem(`servora_${slug}_active_order_t${table}`, orderRecord);
+            sessionStorage.setItem(`servora_${slug}_active_order_t${table}`, orderRecord);
+          }
           localStorage.setItem(`servora_${slug}_active_order`, orderRecord);
           sessionStorage.setItem(`servora_${slug}_active_order`, orderRecord);
           sessionStorage.setItem(`servora_${slug}_last_order_id`, data.orderId);

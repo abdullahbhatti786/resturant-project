@@ -32,12 +32,11 @@ export async function GET(
       );
     }
 
-    // Look for an order on this table that is NOT fully paid yet
-    // (i.e. status is received/preparing/ready/served AND paymentStatus is unpaid/bill_requested)
+    // Look for an active, non-paid order on THIS specific table
     const activeOrder = await Order.findOne({
       restaurantId: restaurant._id,
       tableNumber,
-      paymentStatus: { $in: ["unpaid", "bill_requested"] },
+      paymentStatus: { $ne: "paid" },
     }).sort({ createdAt: -1 });
 
     if (!activeOrder) {
@@ -52,12 +51,14 @@ export async function GET(
       success: true,
       hasActiveOrder: true,
       order: {
-        id: activeOrder._id,
+        id: activeOrder._id.toString(),
         tableNumber: activeOrder.tableNumber,
         total: activeOrder.total,
         status: activeOrder.status,
         paymentStatus: activeOrder.paymentStatus || "unpaid",
-        itemCount: activeOrder.items.reduce((acc, i) => acc + i.quantity, 0),
+        itemCount: Array.isArray(activeOrder.items)
+          ? activeOrder.items.reduce((acc: number, i: { quantity?: number }) => acc + (i.quantity || 1), 0)
+          : 0,
         publicToken: activeOrder.publicToken,
         createdAt: activeOrder.createdAt,
       },

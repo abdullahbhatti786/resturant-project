@@ -34,103 +34,146 @@ export default function CustomerLayout({
   const [activeOrder, setActiveOrder] = useState<ActiveOrderBanner | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const paramTable = searchParams?.get("table");
-      if (paramTable && Number(paramTable) > 0) {
-        setTable(paramTable);
-        sessionStorage.setItem(`servora_${slug}_table`, paramTable);
-        localStorage.setItem(`servora_${slug}_table`, paramTable);
-      } else {
-        const stored =
-          sessionStorage.getItem(`servora_${slug}_table`) ||
-          localStorage.getItem(`servora_${slug}_table`);
-        if (stored) setTable(stored);
+    if (typeof window === "undefined") return;
+
+    // 1. Determine active table number strictly
+    const paramTable = searchParams?.get("table");
+    let currentTableNum: number | null = null;
+
+    if (paramTable && Number(paramTable) > 0) {
+      currentTableNum = Number(paramTable);
+      setTable(currentTableNum);
+      sessionStorage.setItem(`servora_${slug}_table`, String(currentTableNum));
+      localStorage.setItem(`servora_${slug}_table`, String(currentTableNum));
+    } else if (initialTable && Number(initialTable) > 0) {
+      currentTableNum = Number(initialTable);
+      setTable(currentTableNum);
+    } else {
+      const stored =
+        sessionStorage.getItem(`servora_${slug}_table`) ||
+        localStorage.getItem(`servora_${slug}_table`);
+      if (stored && Number(stored) > 0) {
+        currentTableNum = Number(stored);
+        setTable(currentTableNum);
       }
+    }
 
-      const activeTableNum = paramTable || sessionStorage.getItem(`servora_${slug}_table`) || localStorage.getItem(`servora_${slug}_table`);
+    if (!currentTableNum) {
+      // No active table selected -> do not attach any table's active order
+      setActiveOrder(null);
+      return;
+    }
 
-      const checkTableActiveOrder = (tableNum: string | number) => {
-        fetch(`/api/r/${slug}/active-order?table=${tableNum}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success && data.hasActiveOrder && data.order) {
-              const orderRecord = JSON.stringify({
-                orderId: data.order.id,
-                token: data.order.publicToken,
-                tableNumber: Number(data.order.tableNumber),
-              });
-              localStorage.setItem(`servora_${slug}_active_order`, orderRecord);
-              sessionStorage.setItem(`servora_${slug}_active_order`, orderRecord);
-              setActiveOrder({
-                id: data.order.id,
-                token: data.order.publicToken,
-                tableNumber: data.order.tableNumber,
-                status: data.order.status,
-                paymentStatus: data.order.paymentStatus,
-                total: data.order.total,
-              });
-            }
-          })
-          .catch(() => {});
-      };
+    // Function to check active order directly for THIS table from server
+    const checkTableActiveOrder = (tNum: number) => {
+      fetch(`/api/r/${slug}/active-order?table=${tNum}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (
+            data.success &&
+            data.hasActiveOrder &&
+            data.order &&
+            Number(data.order.tableNumber) === Number(tNum)
+          ) {
+            const orderRecord = JSON.stringify({
+              orderId: data.order.id,
+              token: data.order.publicToken,
+              tableNumber: Number(tNum),
+            });
+            localStorage.setItem(`servora_${slug}_active_order_t${tNum}`, orderRecord);
+            sessionStorage.setItem(`servora_${slug}_active_order_t${tNum}`, orderRecord);
+            setActiveOrder({
+              id: data.order.id,
+              token: data.order.publicToken,
+              tableNumber: Number(tNum),
+              status: data.order.status,
+              paymentStatus: data.order.paymentStatus || "unpaid",
+              total: data.order.total,
+            });
+          } else {
+            // No active order on this table (either paid, cancelled, or none placed)
+            localStorage.removeItem(`servora_${slug}_active_order_t${tNum}`);
+            sessionStorage.removeItem(`servora_${slug}_active_order_t${tNum}`);
+            setActiveOrder(null);
+          }
+        })
+        .catch(() => {});
+    };
 
-      // Check active order in local/session storage
-      const activeRaw =
-        localStorage.getItem(`servora_${slug}_active_order`) ||
-        sessionStorage.getItem(`servora_${slug}_active_order`);
+    // 2. Check table-scoped local/session storage
+    const tableRaw =
+      localStorage.getItem(`servora_${slug}_active_order_t${currentTableNum}`) ||
+      sessionStorage.getItem(`servora_${slug}_active_order_t${currentTableNum}`);
 
-      if (activeRaw) {
-        try {
-          const parsed = JSON.parse(activeRaw);
-          if (parsed.orderId && parsed.token) {
-            fetch(`/api/orders/${parsed.orderId}?token=${parsed.token}`)
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.success && data.order) {
-                  // If order is paid, clear active order
-                  if (data.order.paymentStatus === "paid") {
-                    localStorage.removeItem(`servora_${slug}_active_order`);
-                    sessionStorage.removeItem(`servora_${slug}_active_order`);
-                    setActiveOrder(null);
-                    return;
-                  }
-
+    if (tableRaw) {
+      try {
+        const parsed = JSON.parse(tableRaw);
+        if (
+          parsed.orderId &&
+          parsed.token &&
+          Number(parsed.tableNumber) === Number(currentTableNum)
+        ) {
+          fetch(`/api/orders/${parsed.orderId}?token=${parsed.token}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (
+                data.success &&
+                data.order &&
+                Number(data.order.tableNumber) === Number(currentTableNum)
+              ) {
+                // If order is paid or cancelled, table is vacant
+                if (data.order.paymentStatus === "paid" || data.order.status === "cancelled") {
+                  localStorage.removeItem(`servora_${slug}_active_order_t${currentTableNum}`);
+                  sessionStorage.removeItem(`servora_${slug}_active_order_t${currentTableNum}`);
+                  setActiveOrder(null);
+                } else {
                   setActiveOrder({
                     id: parsed.orderId,
                     token: parsed.token,
-                    tableNumber: data.order.tableNumber,
+                    tableNumber: Number(currentTableNum),
                     status: data.order.status,
-                    paymentStatus: data.order.paymentStatus,
+                    paymentStatus: data.order.paymentStatus || "unpaid",
                     total: data.order.total,
                   });
-                } else if (activeTableNum) {
-                  // Fallback to table lookup if stored order is invalid
-                  checkTableActiveOrder(activeTableNum);
                 }
-              })
-              .catch(() => {});
-          }
-        } catch {
-          if (activeTableNum) checkTableActiveOrder(activeTableNum);
+              } else {
+                checkTableActiveOrder(currentTableNum);
+              }
+            })
+            .catch(() => checkTableActiveOrder(currentTableNum));
+        } else {
+          checkTableActiveOrder(currentTableNum);
         }
-      } else if (activeTableNum) {
-        // No local storage record (e.g. user closed browser / scanned fresh QR) -> recover from server by table!
-        checkTableActiveOrder(activeTableNum);
+      } catch {
+        checkTableActiveOrder(currentTableNum);
       }
-
-      // Listen for custom logout / order clear event
-      const onOrderCleared = () => setActiveOrder(null);
-      window.addEventListener("servora_order_cleared", onOrderCleared);
-
-      return () => {
-        window.removeEventListener("servora_order_cleared", onOrderCleared);
-      };
+    } else {
+      // No local record for this table -> check server
+      checkTableActiveOrder(currentTableNum);
     }
-  }, [slug]);
+
+    // 3. Periodic sync every 4 seconds to catch real-time status updates (e.g. waiter marks paid)
+    const interval = setInterval(() => {
+      checkTableActiveOrder(currentTableNum);
+    }, 4000);
+
+    // 4. Listen for custom order cleared event
+    const onOrderCleared = () => {
+      setActiveOrder(null);
+    };
+    window.addEventListener("servora_order_cleared", onOrderCleared);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("servora_order_cleared", onOrderCleared);
+    };
+  }, [slug, searchParams, initialTable]);
 
   const handleDismissOrder = () => {
     setActiveOrder(null);
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && table) {
+      localStorage.removeItem(`servora_${slug}_active_order_t${table}`);
+      sessionStorage.removeItem(`servora_${slug}_active_order_t${table}`);
       localStorage.removeItem(`servora_${slug}_active_order`);
       sessionStorage.removeItem(`servora_${slug}_active_order`);
     }
@@ -234,8 +277,8 @@ export default function CustomerLayout({
           </div>
         </header>
 
-        {/* Persistent Active Order Banner (Visible across ALL screens when order exists) */}
-        {activeOrder && (
+        {/* Persistent Active Order Banner (Strictly visible only for THIS table) */}
+        {activeOrder && table && Number(activeOrder.tableNumber) === Number(table) && (
           <div
             className={`sticky top-[61px] z-30 px-4 py-2.5 flex items-center justify-between text-xs font-bold shadow-md animate-in slide-in-from-top duration-200 ${
               activeOrder.paymentStatus === "bill_requested"

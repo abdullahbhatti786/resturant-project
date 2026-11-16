@@ -21,10 +21,10 @@ export async function GET() {
       return NextResponse.json({ success: false, message: "Restaurant not found" }, { status: 404 });
     }
 
-    // Active orders: any order on this table that is NOT yet paid
+    // Active orders: any order on this table where payment is NOT paid
     const activeOrders = await Order.find({
       restaurantId,
-      paymentStatus: { $in: ["unpaid", "bill_requested"] },
+      paymentStatus: { $ne: "paid" },
     }).sort({ createdAt: -1 });
 
     // Active requests (not resolved)

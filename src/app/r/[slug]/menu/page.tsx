@@ -70,7 +70,7 @@ export default function CustomerMenuPage() {
     }
 
     fetchMenu();
-  }, [slug]);
+  }, [slug, searchParams]);
 
   const fetchMenu = async () => {
     try {

@@ -70,7 +70,19 @@ export default function OrderTrackingPage() {
           if (data.order.paymentStatus === "paid" && typeof window !== "undefined") {
             localStorage.removeItem(`servora_${slug}_active_order`);
             sessionStorage.removeItem(`servora_${slug}_active_order`);
+            if (data.order.tableNumber) {
+              localStorage.removeItem(`servora_${slug}_active_order_t${data.order.tableNumber}`);
+              sessionStorage.removeItem(`servora_${slug}_active_order_t${data.order.tableNumber}`);
+            }
             window.dispatchEvent(new Event("servora_order_cleared"));
+          } else if (typeof window !== "undefined" && data.order.tableNumber) {
+            const record = JSON.stringify({
+              orderId: data.order._id || data.order.id || orderId,
+              token: token || data.order.publicToken,
+              tableNumber: Number(data.order.tableNumber),
+            });
+            localStorage.setItem(`servora_${slug}_active_order_t${data.order.tableNumber}`, record);
+            sessionStorage.setItem(`servora_${slug}_active_order_t${data.order.tableNumber}`, record);
           }
           if (data.restaurant) {
             setRestaurantName(data.restaurant.name);
@@ -92,7 +104,7 @@ export default function OrderTrackingPage() {
     const interval = setInterval(fetchOrder, 4000);
 
     return () => clearInterval(interval);
-  }, [orderId, token]);
+  }, [orderId, token, slug]);
 
   const copyWifiPassword = () => {
     if (wifiCreds.pass) {
